@@ -1,40 +1,40 @@
 // TM_project_buzzer 2023 by: Barto & Wisnu //
 
-#define F_CPU 8000000UL //definiowanie zegara MHz
-#include <avr/io.h>		//standardowa biblioteka
-#include <util/delay.h>	//opoznienie
-#include "pitches.h"	//nuty
-#define BUZZER_PIN PD5	//PIN odpowiadający za PWM - nasze wyjście
+#define F_CPU 8000000UL		//Defining clock
+#include <avr/io.h>		
+#include <util/delay.h>		//delay
+#include "pitches.h"		//pitches 
+#define BUZZER_PIN PD5		//Buzzer OUT PIN
 
 void delayCustom(unsigned int duration) {
 	//funkcja grająca melodie
 	while (duration > 0) {
-		_delay_ms(1);	//odstep pomiedzy dekrementacja
-		duration--;		//odliczanie nut zmniejszanie ich dlugosci o 1
+		_delay_ms(1);		//Delay each decramentation
+		duration--;		//Counting pitches
 	}
 }
 
 void buzzerPlay(unsigned int frequency, unsigned int duration) {
-	// Ustawienie wartości rejestru OCR0B na podstawie częstotliwości dźwięku
-	unsigned int prescaler = 8;										// Wybór preskalera
-	unsigned int top = F_CPU / (2 * prescaler * frequency) - 1;		// Obliczenie wartości rejestru dla PWM
+	//Setting pins, PWM, clocks, prescalers to adjust right freq
+	unsigned int prescaler = 8;						//choosing prescaler
+	unsigned int top = F_CPU / (2 * prescaler * frequency) - 1;		//Counting PWM value
 	
-	OCR0B = top;		//przypisanie rejestrowi OCR0B wyliczonych wartosci
+	OCR0B = top;		//Setting OCR0B caltulated value
 	
-	// Włączenie trybu PWM na Timer/Counter, ustawienie preskalera, zegara
-	TCCR0A |= (1 << COM0B1) | (1 << WGM02) | (1 << WGM00);	//WGM - wave form generator ustalają dkoladny tryb pwm, COM compare output mode
-	TCCR0B |= (1 << CS01);									//3 piny wybierajace rodzaj zegara dla timer counter clk/8 od prescalera clock select bit
+	//Enable PWM timer counter
+	TCCR0A |= (1 << COM0B1) | (1 << WGM02) | (1 << WGM00);					//WGM - wave form generator, COM compare output mode
+	TCCR0B |= (1 << CS01);									//Clock select bit
 	
-	// Generowanie dźwięku przez określony czas
+	// Generating tunes for specific amount of time
 	delayCustom(duration);
 	
-	// Wyłączenie generowania dźwięku
+	// Stop playing 
 	TCCR0A &= ~((1 << COM0B1) | (1 << COM0B0));
 }
 
 void playfurElise() {
 	//melodia Fur Elise
-	DDRD |= (1 << BUZZER_PIN);	//podanie napiecia dla pinu D5 oraz rejestru DDRD - ustawienie jako wyjscie
+	DDRD |= (1 << BUZZER_PIN);	
 	unsigned int melody[] = {
 		
 		NOTE_E5, NOTE_DS5,
@@ -66,13 +66,13 @@ void playfurElise() {
 	unsigned int numNotes = sizeof(melody) / sizeof(melody[0]);
 
 	for (unsigned int i = 0; i < numNotes; i++) {
-		buzzerPlay(8000/melody[i], 8000/noteDuration[i]);		// dostosowanie czestotliwosci melodii oraz czasu trwania
-		delayCustom(100);										// Odstęp między nutami (można dostosować)
+		buzzerPlay(8000/melody[i], 8000/noteDuration[i]);		// Adjust freq and time
+		delayCustom(100);						
 	}
 }
 
 void playImperialMarch() {
-	// Marsz Gwiezdnych Wojen - Imperial March
+	
 	DDRD |= (1 << BUZZER_PIN);
 	unsigned int melody[] = {
 		NOTE_E4, NOTE_E4, NOTE_E4, NOTE_F4, NOTE_C5,
@@ -120,7 +120,7 @@ void playHappyBirthday() {
 		8,4,4,4,2,
 	};
 
-	unsigned int numNotes = sizeof(melody) / sizeof(melody[0]);		//licznik dlugosci nut
+	unsigned int numNotes = sizeof(melody) / sizeof(melody[0]);		//Pitches length count
 
 	for (unsigned int i = 0; i < numNotes; i++)
 	{
@@ -166,9 +166,9 @@ void playPinkPantherTheme() {
 	}
 }
 int main(void) {
-	DDRB = 0x00;		//ustawienie wejscia dla przyciskow
-	PORTB = 0x0f;		//rezystory podciagajace
-	while (1) {			//glowna funckja programu
+	DDRB = 0x00;		//Enable input for tact switches
+	PORTB = 0x0f;		//Setting pull-up resistors
+	while (1) {			
 		if(((PINB == 0x87)||(PINB == 0x97)))
 		{
 			playfurElise();
